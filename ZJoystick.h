@@ -21,6 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
+ *
+ *  Version 1.4 (by Daniel Witurna)
+ *  - Ported to Cocos2d 3.X
+ *  - Minor improvements
  */
 
 
@@ -38,54 +42,39 @@ typedef enum {
 	kFourthQuadrant,
 }tControlQuadrant;
 
+@class ZJoystick;
+
 @protocol ZJoystickDelegate<NSObject>
 
 @optional
 -(void)joystickControlBegan;
 -(void)joystickControlMoved;
 -(void)joystickControlEnded;
-//version 1.3
--(void)joystickControlDidUpdate:(id)joystick toXSpeedRatio:(CGFloat)xSpeedRatio toYSpeedRatio:(CGFloat)ySpeedRatio;
+//version 1.3 (updated in 1.4)
+-(void)joystickControlDidUpdate:(ZJoystick *)joystick toXSpeedRatio:(CGFloat)xSpeedRatio toYSpeedRatio:(CGFloat)ySpeedRatio;
 @end
 
 #define kJoystickRadius 50.0f
 #define kControlActionInterval 0.2f
 
-@interface ZJoystick : CCSprite <CCTargetedTouchDelegate>{
-	CCTexture2D				*_normalTexture;            //background normal (container)
-	CCTexture2D				*_selectedTexture;          //background selected (container)
-	NSString				*_controllerSpriteFile;     //controller sprite sfile
-	
-	tControlQuadrant		_controlQuadrant;           //quadrant where your controller is
-	CCSprite				*_controller;               //controller sprite
-	BOOL					isCurrentlyControlling;     //check if we touched inside the container
-    BOOL                    _isJostickDisabled;         //Check if joystick is enabled
-	BOOL					_isControlling;             //check if joystick is currently controlling
-	id <ZJoystickDelegate>	_delegate;                  //delegate
-	CGFloat					_controllerActualDistance;  //actual distance of controller relative to background and container
-	CGFloat					_speedRatio;                //speed ratio for each joysitkc controller movement
-	CGPoint					_controllerActualPoint;     //controller actual point relative to background
-	id						_controlledObject;          //the object the controller is controlling
-    
-    //version 1.2
-    CGFloat                 _joystickRadius;
-    int                     _joystickTag;
+@interface ZJoystick : CCSprite /*<CCTargetedTouchDelegate>*/{
+	BOOL isCurrentlyControlling;     //check if we touched inside the container
 }
 
-@property(nonatomic, retain) CCTexture2D				*normalTexture;
-@property(nonatomic, retain) CCTexture2D				*selectedTexture;
-@property(nonatomic, retain) NSString					*controllerSpriteFile;
+@property(nonatomic, retain) CCTexture  				*normalTexture;             //background normal (container)
+@property(nonatomic, retain) CCTexture  				*selectedTexture;           //background selected (container)
+@property(nonatomic, retain) NSString					*controllerSpriteFile;      //controller sprite sfile
 
-@property(nonatomic, assign) BOOL						isControlling;
-@property(nonatomic, assign) BOOL                       isJostickDisabled;
+@property(nonatomic, assign) BOOL						isControlling;              //check if joystick is currently controlling
+@property(nonatomic, assign) BOOL                       isJostickDisabled;          //Check if joystick is enabled
 
-@property(nonatomic, assign) CCSprite					*controller;
-@property(nonatomic, assign) tControlQuadrant			controlQuadrant;
-@property(nonatomic, retain) id <ZJoystickDelegate>		delegate;
-@property(nonatomic, assign) CGFloat					controllerActualDistance;
-@property(nonatomic, assign) CGFloat					speedRatio;
-@property(nonatomic, assign) CGPoint					controllerActualPoint;
-@property(nonatomic, retain) id							controlledObject;
+@property(nonatomic, assign) CCSprite					*controller;                //controller sprite
+@property(nonatomic, assign) tControlQuadrant			controlQuadrant;            //quadrant where your controller is
+@property(nonatomic, retain) id <ZJoystickDelegate>		delegate;                   //delegate
+@property(nonatomic, assign) CGFloat					controllerActualDistance;   //actual distance of controller relative to background and container
+@property(nonatomic, assign) CGFloat					speedRatio;                 //speed ratio for each joysitkc controller movement
+@property(nonatomic, assign) CGPoint					controllerActualPoint;      //controller actual point relative to background
+@property(nonatomic, retain) CCSprite					*controlledObject;          //the object the controller is controlling
 
 //version 1.2
 @property(nonatomic, assign) CGFloat                    joystickRadius;
@@ -100,5 +89,4 @@ typedef enum {
 +(id)joystickNormalSpriteFile:(NSString *)filename1 
 		   selectedSpriteFile:(NSString *)filename2 
 		 controllerSpriteFile:(NSString *)controllerSprite;
--(void)deactivateScheduler;;
 @end

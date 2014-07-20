@@ -21,35 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
+ *
+ *  Version 1.4 (by Daniel Witurna)
+ *  - Ported to Cocos2d 3.X
+*  - Minor improvements
  */
 
 #import "ZJoystick.h"
 
-@interface ZJoystick (PrivateMethods)
+@interface ZJoystick (){
+    BOOL _running;
+}
+
 CGFloat getDistanceBetweenTwoPoints(CGPoint point1,CGPoint point2);
 //version 1.3
 -(CGSize)getControlledObjectSize;
+
 @end
 
 @implementation ZJoystick
-@synthesize normalTexture			= _normalTexture;
-@synthesize selectedTexture			= _selectedTexture;
-@synthesize controllerSpriteFile	= _controllerSpriteFile;
 
-@synthesize controller				= _controller;
-@synthesize delegate				= _delegate;
-@synthesize isControlling			= _isControlling;
-@synthesize isJostickDisabled        = _isJostickDisabled;
-@synthesize controlQuadrant			= _controlQuadrant;
-@synthesize controllerActualDistance= _controllerActualDistance;
-@synthesize speedRatio				= _speedRatio;
-@synthesize controllerActualPoint	= _controllerActualPoint;
-@synthesize controlledObject		= _controlledObject;
-
-//version 1.2
-@synthesize joystickRadius          = _joystickRadius;
-//version 1.3
-@synthesize joystickTag             = _joystickTag;
 
 //m = y2-y1 / x2-x1
 CGFloat getSlope(CGPoint point1, CGPoint point2) {
@@ -93,10 +84,10 @@ CGFloat getDistanceBetweenTwoPoints(CGPoint point1,CGPoint point2)
 -(CGRect) getBoundingRect
 {
 	CGSize size = [self contentSize];
-	size.width	*= scaleX_;
-	size.height *= scaleY_;
-	return CGRectMake(position_.x - size.width * anchorPoint_.x, 
-					  position_.y - size.height * anchorPoint_.y, 
+	size.width	*= self.scaleX;
+	size.height *= self.scaleY;
+	return CGRectMake(self.position.x - size.width * self.anchorPoint.x,
+					  self.position.y - size.height * self.anchorPoint.y,
 					  size.width, size.height);
 }
 
@@ -126,7 +117,7 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 }
 
 -(CGFloat)getYMaximumLimit {
-	CGSize winSize  = [CCDirector sharedDirector].winSize;
+	CGSize winSize  = [[CCDirector sharedDirector] viewSize];
     //version 1.3
     CGSize cSize = [self getControlledObjectSize];
     
@@ -141,7 +132,7 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 }
 
 -(CGFloat)getXMaximumLimit {
-	CGSize winSize  = [CCDirector sharedDirector].winSize;
+	CGSize winSize  = [[CCDirector sharedDirector] viewSize];
     //version 1.3
     CGSize cSize = [self getControlledObjectSize];
     
@@ -151,29 +142,21 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 //version 1.3
 -(CGSize)getControlledObjectSize {
     //version 1.3
-	CCSprite *controlledObject = (CCSprite *)_controlledObject;
-    CGSize  cSize = controlledObject.contentSize;
+    CGSize  cSize = self.controlledObject.contentSize;
     
     return cSize;
 }
 
 #pragma mark -
-#pragma mark Scheduler methods
--(void)activateScheduler {
-	[self schedule:@selector(update:)];
-}
+#pragma mark Update
 
--(void)deactivateScheduler {
-	[self unschedule:@selector(update:)];
-}
-
-#pragma mark -
-#pragma mark Set Timers For Objects to move
--(void)update:(ccTime) dt {
+- (void)update:(CCTime)delta{
     
-	CCSprite *controlledObject = (CCSprite *)_controlledObject;
+    if (!_running){
+        return;
+    }
     
-	CGPoint cPoint =  controlledObject.position;
+	CGPoint cPoint =  self.controlledObject.position;
 	
 	CGFloat xMinLimit = [self getXMinimumLimit];
 	CGFloat xMaxLimit = [self getXMaximumLimit];
@@ -217,9 +200,9 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
     ySpeedRatio = ySpeedRatio * _speedRatio;
     
     //version 1.3
-    if (controlledObject) {
+    if (self.controlledObject) {
         //position object
-        controlledObject.position = ccp(controlledObject.position.x + xSpeedRatio, controlledObject.position.y + ySpeedRatio);
+        self.controlledObject.position = ccp(self.controlledObject.position.x + xSpeedRatio, self.controlledObject.position.y + ySpeedRatio);
     }
     //call protocol method here to gain speed ratios
     //check if _delegate conforms to the protocol and responds to the selector
@@ -228,32 +211,47 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
             [_delegate joystickControlDidUpdate:self toXSpeedRatio:xSpeedRatio toYSpeedRatio:ySpeedRatio];
         }
     }
+
+}
+
+#pragma mark -
+#pragma mark init
+
+// Called via SpriteClasses "initWithFile" method
+- (id)initWithTexture:(CCTexture *)texture rect:(CGRect)rect rotated:(BOOL)rotated{
+    self = [super initWithTexture:texture rect:rect rotated:rotated];
+    
+    if(self){
+        _running = FALSE;
+    }
+    
+    return self;
 }
 
 +(id)joystickNormalSpriteFile:(NSString *)filename1 selectedSpriteFile:(NSString *)filename2 controllerSpriteFile:(NSString *)controllerSprite{
-	
-	ZJoystick *joystick		= [[[self alloc] initWithFile:filename2] autorelease];
-	joystick.normalTexture	= [[CCTextureCache sharedTextureCache] addImage:filename1];
-	joystick.selectedTexture= [[CCTextureCache sharedTextureCache] addImage:filename2];
+	ZJoystick *joystick		= [[self alloc] initWithFile:filename2];
+	joystick.normalTexture	= [CCTexture textureWithFile:filename1];
+	joystick.selectedTexture= [CCTexture textureWithFile:filename2];
 	joystick.controllerSpriteFile = controllerSprite;
     joystick.speedRatio     = 1.0;                  //added default values which is 1
     joystick.joystickRadius = kJoystickRadius;      //added default values for joystick radius which is 50
+    joystick.userInteractionEnabled  = TRUE;
 	return joystick;
 }
 
 #pragma mark -
 #pragma mark Touches
-- (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event{
+
+- (void)touchBegan:(UITouch *)touch withEvent:(UIEvent *)event{
 	CCLOG(@"Joystick ccTouchBegan");
     CGPoint location	= [touch locationInView: [touch view]];
 	location			= [[CCDirector sharedDirector] convertToGL:location];
-	//CGRect rect			= [self getBoundingRect];
 	
     //check if we already have touched the background
     //and check if our jostick is enabled
 	if (isCurrentlyControlling || _isJostickDisabled ) {
         CCLOG(@"Joystick Disabled");
-		return NO;
+		return;
 	}
 	
 	CGPoint actualPoint = CGPointMake(location.x - self.position.x, location.y - self.position.y);
@@ -266,7 +264,6 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
     
 	//check if the touch point is within the joystick container's radius
 	if (actualPointDistance <= _joystickRadius){
-        //if (CGRectContainsPoint(rect, location)) {
 		CCLOG(@"Joystick Touched");
 		
         //call delegate method
@@ -276,8 +273,6 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
                 [_delegate performSelector:@selector(joystickControlBegan)];
             }
         }
-        
-		//[_delegate joystickControlBegan];	
 		
 		//Speed ratio
 		//distance of joystick center point to touch point
@@ -292,45 +287,31 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 		//set touch began to YES
 		isCurrentlyControlling = YES;
 		
-		//change joystick to normal image
-		//CCSpriteFrame *frame = [[CCSpriteFrameCache sharedSpriteFrameCache] spriteFrameByName:@"JoystickContainer_norm.png"];
-		//[self setDisplayFrame:frame];
+		//change texture to normal one
 		[self setTexture:_normalTexture];
 		
 		//jostick button controller
 		_controller.position = ccp(self.contentSize.width/2 + actualPoint.x, self.contentSize.height/2 + actualPoint.y);
         
 		//add fadeIn animation
-		id inAction = [CCFadeIn actionWithDuration:kControlActionInterval];
+		id inAction = [CCActionFadeIn actionWithDuration:kControlActionInterval];
 		[_controller runAction:inAction];
 		
 		CCLOG(@"POINT DISTANCE - %f", getDistanceBetweenTwoPoints(self.position, location));
 		
 		self.isControlling = YES;			//our joystick is now controlling
-		
-		//Activate Scheduler
-		[self activateScheduler];
-		
-		return YES;
+        
+        _running = TRUE;
 	}
 	
 	CCLOG(@"Quadrant = %d", _controlQuadrant);
-	
-    
-	
-	return NO; //we return yes to gain access control of MOVE and ENDED delegate methods
 }
-
-- (void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event{
+- (void)touchMoved:(UITouch *)touch withEvent:(UIEvent *)event{
 	CCLOG(@"Joystick ccTouchMoved");
 	CGPoint location	= [touch locationInView: [touch view]];
 	location			= [[CCDirector sharedDirector] convertToGL:location];
-	//CGRect rect			= [self getBoundingRect];
-    
 	
 	CGPoint actualPoint = CGPointMake(location.x - self.position.x, location.y - self.position.y);
-	
-	
     
 	if (isCurrentlyControlling) {
 		
@@ -341,8 +322,6 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
                 [_delegate performSelector:@selector(joystickControlMoved)];
             }
         }
-        
-		//[_delegate joystickControlMoved];
 		
 		//actual distance of joystick and the touch point
 		//this is when the touch is inside the joystick
@@ -350,7 +329,6 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 		
 		//check if touch is inside the 
 		if (actualPointDistance <= _joystickRadius){
-			//if (CGRectContainsPoint(rect, location)) {
 			
 			//Speed ratio
 			//distance of joystick center point to touch point
@@ -361,7 +339,6 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 			
 			//jostick button controller
 			_controller.position = ccp(self.contentSize.width/2 + actualPoint.x, self.contentSize.height/2 + actualPoint.y);
-			//call delegate method
 			
 		} else {
 			//CCLOG(@"JOYSTICK POSITION = (%f, %f)", self.position.x, self.position.y);
@@ -428,12 +405,11 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 
 //Thanks to Joey Hengst for this update.
 //this will allow more than one joysticks in a screen both simulator and device
-- (void)ccTouchCancelled:(UITouch *)touch withEvent:(UIEvent *)event
-{
-    [self ccTouchEnded:touch withEvent:event];
+- (void)touchCancelled:(UITouch *)touch withEvent:(UIEvent *)event{
+    [self touchEnded:touch withEvent:event];
 }
 
--(void) ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event {
+- (void)touchEnded:(UITouch *)touch withEvent:(UIEvent *)event{
 	CCLOG(@"Joystick ccTouchEnded");
 	
     //execute our delegate method
@@ -443,18 +419,14 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
             [_delegate performSelector:@selector(joystickControlEnded)];
         }
     }
-    
-	//[_delegate joystickControlEnded];			//call delegate method
 	
-	//change joystick to transparent image
-	//CCSpriteFrame *frame = [[CCSpriteFrameCache sharedSpriteFrameCache] spriteFrameByName:@"JoystickContainer_trans.png"];
-	//[self setDisplayFrame:frame];
+	//set setTexture to selected one
 	[self setTexture:_selectedTexture];
 	
 	//to avoid fading out everytime touch is ended anywhere.
 	if (isCurrentlyControlling) {
 		//use fadeOut action to fade the controller
-		id outAction = [CCFadeOut actionWithDuration:kControlActionInterval];
+		id outAction = [CCActionFadeOut actionWithDuration:kControlActionInterval];
 		[_controller runAction:outAction];
 	}
 	
@@ -462,11 +434,8 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 	isCurrentlyControlling	= NO;
 	
 	self.isControlling	= NO;				//our joystick has stopped controlling
-	
-	//Deactivate Scheduler
-	[self deactivateScheduler];
-	
-	
+    
+    _running = FALSE;
 }
 
 #pragma mark -
@@ -477,39 +446,30 @@ tControlQuadrant getQuadrantForPoint (CGPoint point) {
 	[super onEnter];
 	
 	self.isControlling = NO; //initially our joystick should stop controlling
-	
+    
 	//we add joystick button sprite initialy
 	self.controller		= nil;
-	self.controller		= [CCSprite spriteWithFile:_controllerSpriteFile];
+	self.controller		= [CCSprite spriteWithImageNamed:_controllerSpriteFile];
 	_controller.position= ccp(-200, -200);
 	_controller.opacity	= 0.0f;
 	[self addChild:_controller];
-	
-	//we call touch dispatcher to swallow touches
-	[[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self 
-													 priority:0 
-											  swallowsTouches:YES];
 }
 
 - (void)onExit
 {
 	CCLOG(@"onExit");
 	[self removeChild:_controller cleanup:YES];
-	[[CCTouchDispatcher sharedDispatcher] removeDelegate:self];
 	
 	[super onExit];
 }
 
 #pragma mark -
 -(void)dealloc {
-	
 	self.controllerSpriteFile = nil;
 	self.normalTexture      = nil;
 	self.selectedTexture    = nil;
 	self.controlledObject   = nil;
 	self.delegate           = nil;
-    
-	[super dealloc];
 }
 
 @end
