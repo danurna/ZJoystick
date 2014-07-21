@@ -1,5 +1,43 @@
 ##COCOS2D ZJoystick API (Version 1.4)
 
+##How To Use
+1. import Joystick header file -> #import "ZJoystick.h"
+2. Add <ZJoystickDelegate> in the interface declaration
+3. then add these codes below to any of your scenes
+
+```
+//Controlled Object
+CCSprite *controlledSprite  = [CCSprite spriteWithFile:@"Joystick_norm.png"];
+controlledSprite.position   = ccp(winSize.width/2, winSize.height/2);   
+[self addChild:controlledSprite];
+        
+//Joystick
+ZJoystick *_joystick	= [ZJoystick joystickNormalSpriteFile:@"JoystickContainer_norm.png" selectedSpriteFile:@"JoystickContainer_trans.png" controllerSpriteFile:@"Joystick_norm.png"];
+_joystick.position	= ccp(_joystick.contentSize.width/2, _joystick.contentSize.height/2);
+_joystick.delegate	= self;				//Joystick Delegate
+_joystick.controlledObject  = controlledSprite;     //we set our controlled object which the blue circle
+_joystick.speedRatio         = 2.0f;                //we set speed ratio, movement speed of blue circle once controlled to any direction
+_joystick.joystickRadius     = 50.0f;               //Added in v1.2
+[self addChild:_joystick];
+
+//JoystickDelegate
+//ZJoystick also has three delegate methods that you could use
+-(void)joystickControlBegan;
+-(void)joystickControlMoved;
+-(void)joystickControlEnded;
+
+//You can implement any of these protocol methods if you want.
+```
+
+###HERE WE GO!
+
+You can see the blue circle at the center and the joystick at the lower left corner.
+Try controlling the joystick and you can see this blue circle moving as you please.
+
+###ZIP file
+There is a ZIP file there (MyJoystickDemo.zip) which is a sample project that you could use.
+
+##Changelog
 ###[Version 1.4 Updates]
 1. Updated ZJoystick Demo to use Cocos2D 3.X
 2. Ported ZJoystick to Cocos2D 3.X
@@ -47,50 +85,7 @@ This protocol method is used to acquire the ZJoystick object itself, XSpeed and 
 * JoystickContainer_trans.png - rest state (Joystick Container, serves as the Joystick background)
 * JoystickContainer_norm.png - active state (Joystick Container, serves as the Joystick background)
 
-##HOW TO USE
-1. import Joystick header file -> #import "ZJoystick.h"
-2. Add <ZJoystickDelegate> in the interface declaration
-3. then add these codes below to any of your scenes
-
-```
-//Controlled Object
-CCSprite *controlledSprite  = [CCSprite spriteWithFile:@"Joystick_norm.png"];
-controlledSprite.position   = ccp(winSize.width/2, winSize.height/2);   
-[self addChild:controlledSprite];
-        
-//Joystick
-ZJoystick *_joystick	= [ZJoystick joystickNormalSpriteFile:@"JoystickContainer_norm.png" selectedSpriteFile:@"JoystickContainer_trans.png" controllerSpriteFile:@"Joystick_norm.png"];
-_joystick.position	= ccp(_joystick.contentSize.width/2, _joystick.contentSize.height/2);
-_joystick.delegate	= self;				//Joystick Delegate
-_joystick.controlledObject  = controlledSprite;     //we set our controlled object which the blue circle
-_joystick.speedRatio         = 2.0f;                //we set speed ratio, movement speed of blue circle once controlled to any direction
-_joystick.joystickRadius     = 50.0f;               //Added in v1.2
-[self addChild:_joystick];
-
-//JoystickDelegate
-//ZJoystick also has three delegate methods that you could use
--(void)joystickControlBegan;
--(void)joystickControlMoved;
--(void)joystickControlEnded;
-
-//You can implement any of these protocol methods if you want.
-```
-
-###HERE WE GO!
-
-//You can see the blue circle at the center and the joystick at the lower left corner
-//try controlling the joystick and you can see this blue circle moving as you please.
-
-###ZIP file
-There is a ZIP file there (MyJoystickDemo.zip) which is a sample project that you could use.
-
-Check the blog post tutorial on how to use ZJoystick: 
-http://zaldzbugz.posterous.com/first-article
-
 ###Credits
 Thanks to ZaldzBugz for the previous work. I've just updated ZJoystick to be able to use it with the newest Cocos2D Version.
 
-*ZaldzBugz*
-zbnb@yahoo.com
-http://zaldzbugz.posterous.com
-http://twitter.com/zaldzbugz
+*ZaldzBugz* (zbnb@yahoo.com, http://zaldzbugz.posterous.com, http://twitter.com/zaldzbugz)
