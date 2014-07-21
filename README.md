@@ -1,9 +1,9 @@
 ##COCOS2D ZJoystick API (Version 1.4)
 
 ##How To Use
-1. import Joystick header file -> #import "ZJoystick.h"
-2. Add <ZJoystickDelegate> in the interface declaration
-3. then add these codes below to any of your scenes
+1. Import Joystick header file -> `#import "ZJoystick.h"`
+2. Add `ZJoystickDelegate` in the interface declaration
+3. Initialize `ZJoystick` and add it to your scene
 
 ```
 //Controlled Object
@@ -21,16 +21,16 @@ _joystick.joystickRadius     = 50.0f;               //Added in v1.2
 [self addChild:_joystick];
 
 //JoystickDelegate
-//ZJoystick also has three delegate methods that you could use
+//ZJoystick also has four optional delegate methods that you could use
 -(void)joystickControlBegan;
 -(void)joystickControlMoved;
 -(void)joystickControlEnded;
 
-//You can implement any of these protocol methods if you want.
+-(void)joystickControlDidUpdate:(ZJoystick *)joystick toXSpeedRatio:(CGFloat)xSpeedRatio toYSpeedRatio:(CGFloat)ySpeedRatio;
+
 ```
 
-###HERE WE GO!
-
+###Here we go!
 You can see the blue circle at the center and the joystick at the lower left corner.
 Try controlling the joystick and you can see this blue circle moving as you please.
 
@@ -79,7 +79,7 @@ This protocol method is used to acquire the ZJoystick object itself, XSpeed and 
 * ZJoystick.h - joystick interface file
 * ZJoystick.m - joystick implementation file
 
-//Sample Image files used in the example code below 
+**Sample Image files used in the example code below** 
 * background.png - screen background
 * Joystick_norm.png - (Our Joystick)
 * JoystickContainer_trans.png - rest state (Joystick Container, serves as the Joystick background)
